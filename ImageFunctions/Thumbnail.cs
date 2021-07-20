@@ -86,8 +86,12 @@ namespace ImageFunctions
 
                     if (encoder != null)
                     {
-                        var thumbnailWidth = Convert.ToInt32(Environment.GetEnvironmentVariable("THUMBNAIL_WIDTH"));
+                        // var thumbnailWidth = Convert.ToInt32(Environment.GetEnvironmentVariable("THUMBNAIL_WIDTH"));
+                        var resizeDimention1 = Convert.ToInt32(Environment.GetEnvironmentVariable("DIMENSION1"));
+                        var resizeDimention2 = Convert.ToInt32(Environment.GetEnvironmentVariable("DIMENSION2"));
                         var thumbContainerName = Environment.GetEnvironmentVariable("THUMBNAIL_CONTAINER_NAME");
+                        var watermarkContainerName = Environment.GetEnvironmentVariable("WATERMARK_CONTAINER_NAME");
+                        var watermarkFileName = Environment.GetEnvironmentVariable("WATERMARK_FILE_NAME");
                         var blobServiceClient = new BlobServiceClient(BLOB_STORAGE_CONNECTION_STRING);
                         var blobContainerClient = blobServiceClient.GetBlobContainerClient(thumbContainerName);
                         var blobName = GetBlobNameFromUrl(createdEvent.Url);
@@ -100,16 +104,29 @@ namespace ImageFunctions
 
                             if (image.Width > image.Height)
                             {
-                                image.Mutate(x => x.Resize(1200, 800));
+                                image.Mutate(x => x.Resize(resizeDimention1, resizeDimention2));
                             }
                             else
                             {
-                                image.Mutate(x => x.Resize(800, 1200));
+                                image.Mutate(x => x.Resize(resizeDimention2, resizeDimention1));
                             }
+
+                            // image.Mutate(x => x.)
+
+                            var watermarkServiceClient = new BlobServiceClient(BLOB_STORAGE_CONNECTION_STRING);
+                            var watermarkContainerClient = blobServiceClient.GetBlobContainerClient(watermarkContainerName);
+                            // var watermarkName = GetBlobNameFromUrl(createdEvent.Url);
+                            var watermark = watermarkContainerClient.GetBlobs();
+
+
+
+
+
                             image.Save(output, encoder);
                             output.Position = 0;
                             await blobContainerClient.UploadBlobAsync(blobName, output);
                         }
+
                     }
                     else
                     {
